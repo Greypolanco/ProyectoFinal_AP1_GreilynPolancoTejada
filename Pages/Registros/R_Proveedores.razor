@@ -1,0 +1,140 @@
+@page "/proveedor"
+@inject ProveedoresBLL proveedorbll
+@inject NotificationService notificationService
+
+<EditForm Model="proveedor" OnValidSubmit="Guardar" >
+    <DataAnnotationsValidator/>
+    <div class="card" id="R_Proveedor">
+        <div class="card-header">
+            <h1>Entrada de Empresas</h1>
+        </div>
+        <div class="card-body">
+             @* No. de Producto y boton de buscar *@
+            <label class="form-label">No. Proveedor</label>
+            <div id="buscar">
+                <InputNumber id="numero" @bind-Value='proveedor.ProveedorId' class='form-control'></InputNumber>
+                <button  type="button" class="btn btn-info oi oi-magnifying-glass" @onclick="Buscar"></button>
+            </div>
+
+            @* Fecha*@
+            <div class="form-group">
+                <label class="form-label">Fecha</label>
+                <InputDate  id="Fecha" @bind-Value="proveedor.Fecha" class="form-control"/>
+            </div>
+            @* Nombre*@
+            <div class="form-group">
+                <label class="form-label">Nombre</label>
+                <InputText @bind-Value="proveedor.Nombre" id="Nombre" class="form-control"/>
+                <ValidationMessage For="@(() => proveedor.Nombre)" />
+            </div>
+            
+            <div class="input-group d-flex align-items-end">
+                @* Empresa *@
+                <div class="col-3 flex-fill mx-2">
+                    <label class="form-label">Empresa</label>
+                    <InputText @bind-Value="proveedor.Empresa" class="form-control"></InputText>
+                    <ValidationMessage For="@(() => proveedor.Empresa)" />
+                </div>
+                @* RNC *@
+                <div class="col-3 flex-fill mx-2">
+                    <label class="from-label">RNC</label>
+                    <InputNumber @bind-Value="proveedor.RNC" class="form-control"></InputNumber>
+                    <ValidationMessage For="@(() => proveedor.RNC)" />
+                </div>
+            </div>
+        </div>
+         @* Botones *@
+        <div class="accordion-flush">
+            <button type="button" class="btn btn-primary" @onclick="Nuevo"><span class="oi oi-file"></span> Nuevo</button>
+            <button type="submit" class="btn btn-success"><span class="oi oi-document"></span> Guardar</button>
+            <button type="button" class="btn btn-danger" @onclick="Eliminar"><span class="oi oi-delete"></span> Eliminar</button>
+        </div>
+    </div>
+</EditForm>
+
+
+@code{
+    [Parameter]
+    public int proveedorId {get; set;}
+
+    public Proveedores proveedor { get; set; } = new Proveedores();
+
+    public List<Categorias> listCategorias {get; set;} = new List<Categorias>();
+        
+    void Nuevo(){
+        this.proveedor = new Proveedores();
+    }
+
+    void Buscar()
+    {
+        var proveedorbuscar = proveedorbll.Buscar(proveedor.ProveedorId);
+        if(proveedorbuscar != null)
+        {
+            this.proveedor = proveedorbuscar;
+        } 
+    }
+
+    void Guardar(){
+        if(!Validar())
+            return; 
+        if(proveedorbll.Guardar(this.proveedor)){
+            {
+
+                ShowNotification(
+                    new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Guardado Correctamente"
+                    });
+                this.Nuevo();
+            }
+        }
+        else
+        {
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "No se a guardado Correctamente"
+                });
+        }
+    }
+    void Eliminar(){ 
+        if(proveedorbll.Eliminar(this.proveedor)){
+            {
+
+                ShowNotification(
+                    new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Eliminado Correctamente"
+                    });
+                this.Nuevo();
+            }
+        }
+        else{
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "No se a Eliminado Correctamente"
+                });
+        }
+    }
+
+    bool Validar(){
+        if(string.IsNullOrEmpty(proveedor.Nombre))
+            return false;
+        if(string.IsNullOrEmpty(proveedor.Empresa))
+            return false;
+        if(proveedor.RNC <=0)
+            return false;
+        else
+            return true;
+    }
+
+    void ShowNotification(NotificationMessage message)
+    {
+        notificationService.Notify(message);
+    }
+}

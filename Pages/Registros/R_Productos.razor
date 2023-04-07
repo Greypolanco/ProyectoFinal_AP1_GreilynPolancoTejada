@@ -1,0 +1,173 @@
+@page "/producto"
+
+@inject ProductosBLL productobll
+@inject CategoriaBLL categoriabll
+@inject NotificationService notificationService
+
+<EditForm Model="producto" OnValidSubmit="Guardar" >
+    <DataAnnotationsValidator/>
+    <div class="card" id="R_Productos">
+        <div class="card-header">
+            <h1>Entrada de Productos</h1>
+        </div>
+        <div class="card-body">
+             @* No. de Producto y boton de buscar *@
+            <label class="form-label">No. Producto</label>
+            <div id="buscar">
+                <InputNumber id="numero" @bind-Value='producto.ProductoId' class='form-control'></InputNumber>
+                <button type="button" class="btn btn-info oi oi-magnifying-glass" @onclick="Buscar"></button>
+            </div>
+            
+            @* Descripción*@
+            <div class="col-3 flex-fill mx-2">
+                <label class="form-label">Descripción</label>
+                <InputText @bind-Value="producto.Descripcion" class="form-control"/>
+                <ValidationMessage For="@(() => producto.Descripcion)" />
+            </div>
+            <div class="input-group d-flex align-items-end">
+                @* Costo *@
+                <div class="col-3 flex-fill mx-2">
+                    <label class="form-label">Costo</label>
+                    <InputNumber @bind-Value="producto.Costo" class="form-control"></InputNumber>
+                    <ValidationMessage For="@(() => producto.Costo)" />
+                </div>
+                @* Precio *@
+                <div class="col-3 flex-fill mx-2">
+                    <label class="from-label">Precio</label>
+                    <InputNumber @bind-Value="producto.Precio" class="form-control"></InputNumber>
+                    <ValidationMessage For="@(() => producto.Precio)" />
+                </div>
+            </div>
+
+            <div class="input-group d-flex align-items-end">
+                @* Existencia *@
+                <div class="col-3 flex-fill mx-2">
+                    <label class="from-label">Existencia</label>
+                    <InputNumber @bind-Value="producto.Existencia" class="form-control"></InputNumber>
+                    <ValidationMessage For="@(() => producto.Existencia)" />
+                </div>
+                <div class="col-3 flex-fill mx-1">
+                    <label class="form-label">Categorias</label>
+                    <InputSelect @bind-Value="producto.CategoriaId" class="form-select" >
+                    <option value="0" selected="selected" hidden="hidden" disabled="disable">Seleciona la categoria del producto</option>
+                        @foreach(Categorias categoria in listCategorias){
+                            <option value="@categoria.CategoriaId">@categoria.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            
+        </div>
+         @* Botones *@
+        <div class="accordion-flush">
+            <button type="button" class="btn btn-primary" @onclick="Nuevo"><span class="oi oi-file"></span> Nuevo</button>
+            <button type="submit" class="btn btn-success"><span class="oi oi-document"></span> Guardar</button>
+            <button type="button" class="btn btn-danger" @onclick="Eliminar"><span class="oi oi-delete"></span> Eliminar</button>
+        </div>
+    </div>
+</EditForm>
+
+@code{
+
+    [Parameter]
+    public int productoId {get; set;}
+    public int categoriaId {get; set;}
+
+    public Productos producto { get; set; } = new Productos();
+
+    public Categorias categoria {get; set;} = new Categorias();
+
+    public List<Categorias> listCategorias {get; set;} = new List<Categorias>();
+        protected override void OnInitialized()
+        {
+            this.producto.ProductoId = productoId;
+            categoria.CategoriaId = categoriaId;
+            listCategorias = categoriabll.GetList(g => true);
+            if(productoId > 0)
+            {
+                this.producto.ProductoId = productoId;
+                this.Buscar();
+            }
+        }
+    void Nuevo(){
+        this.producto = new Productos();
+    }
+
+    void Buscar()
+    {
+        var productobuscar = productobll.Buscar(producto.ProductoId);
+        if(productobuscar != null)
+        {
+            this.producto = productobuscar;
+        } 
+    }
+
+    void Guardar(){
+        if(!Validar())
+            return; 
+        if(productobll.Guardar(this.producto)){
+            {
+
+                ShowNotification(
+                    new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Guardado Correctamente"
+                    });
+                this.Nuevo();
+            }
+        }
+        else
+        {
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "No se a guardado Correctamente"
+                });
+        }
+    }
+    void Eliminar(){ 
+        if(productobll.Eliminar(this.producto)){
+            {
+
+                ShowNotification(
+                    new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Eliminado Correctamente"
+                    });
+                this.Nuevo();
+            }
+        }
+        else{
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "No se a Eliminado Correctamente"
+                });
+        }
+    }
+
+    bool Validar(){
+        if(string.IsNullOrEmpty(producto.Descripcion))
+            return false;
+        if(producto.Existencia <=0)
+            return false;
+        if(producto.Precio <=0)
+            return false;
+        if(producto.Costo <=0)
+            return false;
+        if(producto.CategoriaId <=0)
+            return false;
+        else
+            return true;
+    }
+
+    void ShowNotification(NotificationMessage message)
+    {
+        notificationService.Notify(message);
+    }
+    
+}

@@ -1,0 +1,245 @@
+@page "/compra"
+@inject ComprasBLL comprabll
+@inject ProductosBLL productobll
+@inject NotificationService notificationService
+
+<EditForm Model="compra" OnValidSubmit="Guardar" >
+    <DataAnnotationsValidator/>
+    <div class="card">
+        <div class="card-header">
+            <h1>Entrada de Compras</h1>
+        </div>
+        <div class="card-body">
+             @* No. de Compra y boton de buscar *@
+            
+            <label class="form-label">No. Compra</label>
+            <div id="buscar">
+                <InputNumber id="numero" @bind-Value='compra.CompraId' class='form-control'></InputNumber>
+                <button type="button" class="btn btn-info oi oi-magnifying-glass" @onclick="Buscar"></button>
+            </div>
+            
+             @* Fecha *@
+            <div class="form-group">
+                <label class="form-label">Fecha</label>
+                <InputDate  id="Fecha" @bind-Value="compra.Fecha" class="form-control"/>
+            </div>
+             @* Concepto *@
+            <div>
+                <label class="form-label">Concepto</label>
+                <InputText @bind-Value="compra.Concepto" class="form-control"></InputText>
+            </div>
+        </div>
+             @* Detalle de Compra *@
+            <div class="card">
+                <div class="card-header">
+                    <h3>Detalle</h3>
+                </div>
+                <div class="card-body">
+                    <div class="input-group d-flex align-items-end">
+                        <div class="col-6 flex-fill mx-1">
+                             @* Prodcutos *@
+                            <label class="form-label">Productos</label>
+                            <InputSelect @bind-Value="compraDetalle.ProductoId" class='form-select'>
+                            <option value="0" selected="selected" hidden="hidden" disabled="disabled">- Selecciona un producto a Comprar -</option>
+                                @foreach (Productos producto in Lista)
+                                {
+                                    <option value="@producto.ProductoId">@producto.Descripcion (@producto.Existencia restantes)</option>  
+                                }
+                            </InputSelect>
+                        </div>
+                         @* Cantidad a agg de cada producto *@
+                        <div class="col-3 flex-fill mx-2">
+                            <label class="from-label">Cantidad</label>
+                            <InputNumber @bind-Value="compraDetalle.Cantidad" class="form-control"></InputNumber>
+                            <ValidationMessage For="@(() => compraDetalle.Cantidad)" />
+                        </div>
+                         @* Boton de agg Detalle *@
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-success oi oi-plus" @onclick="AggDetalle"></button>
+                        </div>
+                    </div>
+                    
+                    <table class="table">
+                        <thead>
+                            <th>Producto</th>
+                            <th>Descripcion</th>
+                            <th>Cantidad</th>
+                            <th></th>
+                        </thead>
+                        <tbody>
+                            @foreach(var Item in compra.CompraDetalles)
+                            {
+                                var productoEncontrado = BuscarProducto(Item.ProductoId);
+                                <tr>
+                                    <td>@Item.ProductoId</td>
+                                    <td>@productoEncontrado.Descripcion</td>
+                                    <td>@Item.Cantidad</td>
+                                     @* Boton de Eliminar *@
+                                    <td><button class="btn btn-danger oi oi-x" @onclick=@(() => EliminarDetalle(Item))></button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                     @* Cantidad total y su sumatoria *@
+                    <label class="form-label">Cantidad Total : @compra.CompraDetalles.Sum(c => c.Cantidad)</label> 
+                </div>
+            
+            </div>
+         @* Botones *@
+        <div class="accordion-flush">
+            <button type="button" class="btn btn-primary" @onclick="Nuevo"><span class="oi oi-file"></span> Nuevo</button>
+            <button type="submit" class="btn btn-success"><span class="oi oi-document"></span> Guardar</button>
+            <button type="button" class="btn btn-danger" @onclick="Eliminar"><span class="oi oi-delete"></span> Eliminar</button>
+        </div>
+    </div>
+</EditForm>
+
+@code{
+    [Parameter]
+    public int CompraID { get; set; }
+    public Compras compra { get; set; } = new Compras();
+    
+    public CompraDetalles compraDetalle { get; set; } = new CompraDetalles();
+    public List<Productos> Lista { get; set; } = new List<Productos>();
+    void Nuevo(){
+        this.compra = new Compras();
+        compraDetalle = new CompraDetalles();
+    }
+
+    void Buscar(){
+        var compraInicial = comprabll.Buscar(compra.CompraId);
+        if(compraInicial != null){
+            compra = compraInicial;
+        }
+    }
+    void Guardar(){
+        if(!Validar())
+            return;
+        if(comprabll.Guardar(compra)){
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Guardado Correctamente"
+                });
+            this.Nuevo();
+        }
+        else{
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = " No Guardado Correctamente"
+                });
+        }
+    }
+
+    void Eliminar(){
+        if(comprabll.Eliminar(compra))
+        {
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Eliminado Correctamente"
+                });
+            this.Nuevo();
+        }
+        else{
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = " no se puedo Eliminar "
+                });
+        }
+    }
+    protected override void OnInitialized()
+    {
+        Lista = productobll.GetList(p => true);
+        if(CompraID !=0){
+            this.compra.CompraId = CompraID;
+            Buscar();
+        }
+    }
+
+    private Productos BuscarProducto(int productoId)
+    {
+        Productos prod = new Productos();
+        var prodFound = productobll.Buscar(productoId);
+        if(prodFound != null)
+            return prod = prodFound;
+        return new Productos();
+    }
+
+    void AggDetalle()
+    {
+        if(compraDetalle.Cantidad <= 0){
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "la cantidad deseada debe ser mayor a cero"
+                });
+                return;
+        }
+        var productoENS = productobll.Buscar(compraDetalle.ProductoId);
+        if(productoENS != null && productoENS.Existencia < compraDetalle.Cantidad){
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "la cantidad deseada supera la cantidad disponible"
+                });
+                return;
+        }
+        if(productoENS != null){
+            compra.CompraDetalles.Add(compraDetalle);
+            compraDetalle = new CompraDetalles();   
+        }
+        else{
+            ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "El producto fue nulo"
+                });
+                return;
+        }
+    }
+
+    void EliminarDetalle(CompraDetalles detalle)
+    {
+        var detalleEncontrado = compra.CompraDetalles.Find(d => d.CompraDetalleId == detalle.CompraDetalleId);
+        if(detalleEncontrado != null)
+        {
+            detalle = detalleEncontrado;
+            compra.CompraDetalles.Remove(detalle); 
+        }
+    }
+
+    bool Validar(){
+        string? mensajeError = string.Empty;
+        if(string.IsNullOrEmpty(compra.Concepto)){
+            mensajeError += "El concepto estestá vacío\n";
+        }
+        if(compra.CompraDetalles.Count < 1){
+            mensajeError += "Debe utilizar al menos 1 producto\n";
+        }
+       if(mensajeError.Equals(string.Empty))
+            return true;
+            
+        ShowNotification(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = mensajeError
+                });
+                return false;
+    }
+
+    void ShowNotification(NotificationMessage message)
+    {
+        notificationService.Notify(message);
+    }
+}
