@@ -3,6 +3,7 @@ global using Microsoft.EntityFrameworkCore;
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Linq.Expressions;
+global using Radzen;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -28,6 +29,11 @@ builder.Services.AddScoped<CategoriaBLL>();
 builder.Services.AddScoped<ComprasBLL>();
 builder.Services.AddScoped<ProductosBLL>();
 builder.Services.AddScoped<ProveedoresBLL>();
+
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<TooltipService>();
+builder.Services.AddScoped<ContextMenuService>();
 
 var app = builder.Build();
 
