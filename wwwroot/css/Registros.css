@@ -1,0 +1,18 @@
+#R_Productos{
+    width: 750px;
+}
+#R_Proveedor{
+    width: 600px;
+}
+#buscar{
+    display: flex;
+}
+#numero{
+    width: 250px;
+}
+#Fecha{
+    width: 250px;
+}
+#Nombre{
+    width: 350px;
+}
