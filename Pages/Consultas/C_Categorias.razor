@@ -1,0 +1,40 @@
+@page "/consultacategoria"
+
+@inject CategoriaBLL categoriabll
+
+
+   
+<table id="categoria" class="table table-bordered">
+    <caption>Lista De Categorias</caption>
+    <thead >
+        <tr>
+            <th >Id</th>
+            <th >Nombre Categoria</th>
+            <th >Cantidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var Item in Lista)
+        {
+            <tr>
+                <td >@Item.CategoriaId</td>
+                <td >@Item.Nombre</td>
+                <td >@Item.Total</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@code{
+    public List<Categorias> Lista { get; set; } = new List<Categorias>();
+    protected override void OnInitialized()
+    {
+        Buscar();
+    }
+    public void Buscar(){
+        Lista = categoriabll.GetList(p => true);
+        
+    }
+    
+}

@@ -1,0 +1,36 @@
+@page "/consultacompra"
+
+@inject ComprasBLL comprabll
+   
+<table class="table table-hover">
+    <caption>Lista De Compras</caption>
+    <thead >
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Concepto</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var Item in Lista)
+        {
+            <tr>
+                <td >@Item.CompraId</td>
+                <td >@Item.Fecha.ToShortDateString()</td>
+                <td >@Item.Concepto</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code{
+    public List<Compras> Lista { get; set; } = new List<Compras>();
+    protected override void OnInitialized()
+    {
+        Buscar();
+    }
+    public void Buscar(){
+        Lista = comprabll.GetList(p => true);
+    }
+    
+}

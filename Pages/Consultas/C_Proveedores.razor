@@ -1,0 +1,45 @@
+@page "/consultaproveedor"
+
+@inject ProveedoresBLL proveedorbll
+
+<EditForm Model="Lista">
+   
+    <table class="table table-hover">
+        <caption>Lista De Proveedores</caption>
+        <thead >
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Empresa</th>
+                <th scope="col">RNC</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Item in Lista)
+            {
+                <tr>
+                    <td >@Item.ProveedorId</td>
+                    <td >@Item.Fecha.ToShortDateString()</td>
+                    <td >@Item.Nombre</td>
+                    <td >@Item.Empresa</td>
+                    <td >@Item.RNC</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+</EditForm>
+
+@code{
+    public List<Proveedores> Lista { get; set; } = new List<Proveedores>();
+    protected override void OnInitialized()
+    {
+        Buscar();
+    }
+    public void Buscar(){
+        Lista = proveedorbll.GetList(p => true);
+        
+    }
+    
+}
