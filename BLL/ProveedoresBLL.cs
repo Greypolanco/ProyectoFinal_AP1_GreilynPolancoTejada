@@ -12,8 +12,11 @@ public class ProveedoresBLL
     }
 
     public bool Insertar(Proveedores proveedor){
+        bool paso = false;
         _contexto.Proveedores.Add(proveedor);
-        return _contexto.SaveChanges()>0;
+        paso= _contexto.SaveChanges()>0;
+        _contexto.Entry(proveedor).State = EntityState.Detached;
+        return paso;
     }
 
     public bool Modificar(Proveedores proveedor){
